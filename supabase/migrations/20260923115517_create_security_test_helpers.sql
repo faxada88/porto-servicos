@@ -1,0 +1,13 @@
+-- =========================================================
+-- Security Test Helpers
+-- Porto Serviços
+-- =========================================================
+--
+-- Intentionally empty migration.
+--
+-- Security/RLS test helpers must not be installed in the
+-- production database.
+--
+-- Automated database security tests will be maintained
+-- separately from production migrations.
+-- =========================================================
