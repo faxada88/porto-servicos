@@ -396,7 +396,7 @@ export function ProviderSignUpForm() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function createProviderAccount() {
+    async function createProviderAccount() {
     if (!validateStepThree()) return;
 
     setLoading(true);
@@ -407,12 +407,10 @@ export function ProviderSignUpForm() {
     const normalizedEmail = form.email.trim().toLowerCase();
     const normalizedName = form.fullName.trim();
     const phoneDigits = form.phone.replace(/\D/g, "");
+    const priceCents =
+      form.pricingType === "quote" ? null : priceToCents(form.price);
 
     try {
-      /*
-       * Mantemos a estrutura interna provider/customer para preservar
-       * compatibilidade com o banco e as políticas existentes.
-       */
       const { data: signUpData, error: signUpError } =
         await supabase.auth.signUp({
           email: normalizedEmail,
@@ -423,11 +421,20 @@ export function ProviderSignUpForm() {
               full_name: normalizedName,
               phone: phoneDigits,
               account_type: "provider",
+              business_name: form.businessName.trim(),
+              provider_description: form.description.trim() || null,
+              category_id: form.categoryId,
+              service_name: form.serviceName.trim(),
+              service_description:
+                form.serviceDescription.trim() || null,
+              pricing_type: form.pricingType,
+              price_cents: priceCents,
             },
           },
         });
 
       if (signUpError) {
+        console.error("Erro ao criar conta do parceiro:", signUpError);
         setError(translateAuthError(signUpError.message));
         return;
       }
@@ -437,50 +444,9 @@ export function ProviderSignUpForm() {
         return;
       }
 
-      if (!signUpData.session) {
-        router.replace("/auth/sign-up-success?tipo=prestador");
-        return;
-      }
-
-      const priceCents =
-        form.pricingType === "quote" ? null : priceToCents(form.price);
-
-      /*
-       * Envia o cadastro para o fluxo de aprovação.
-       * Os nomes técnicos do RPC permanecem inalterados.
-       */
-      const { error: onboardingError } = await supabase.rpc(
-        "submit_provider_onboarding",
-        {
-          target_phone: phoneDigits,
-          target_business_name: form.businessName.trim(),
-          target_description: form.description.trim() || null,
-          target_category_id: form.categoryId,
-          target_service_name: form.serviceName.trim(),
-          target_service_description:
-            form.serviceDescription.trim() || null,
-          target_pricing_type: form.pricingType,
-          target_price_cents: priceCents,
-        },
-      );
-
-      if (onboardingError) {
-        console.error(
-          "Erro ao enviar cadastro do parceiro:",
-          onboardingError,
-        );
-
-        setError(
-          translateOnboardingError(onboardingError.message),
-        );
-
-        return;
-      }
-
       router.replace(
         "/auth/sign-up-success?tipo=prestador&status=pending",
       );
-
       router.refresh();
     } catch (unexpectedError) {
       console.error(
