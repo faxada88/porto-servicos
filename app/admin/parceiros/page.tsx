@@ -91,7 +91,7 @@ function PartnersLoading() {
         </div>
         <div className="mt-6 h-96 animate-pulse rounded-[30px] bg-white" />
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -176,8 +176,7 @@ async function PartnersContent() {
   const totalCredits = wallets.reduce((total, wallet) => total + wallet.balance, 0);
 
   return (
-    <main className="min-h-screen bg-[#f4f7f4] text-[#142018]">
-      <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7 sm:py-8 xl:px-10">
+    <div className="px-4 py-6 sm:px-7 sm:py-8 xl:px-9">\n      <div className="mx-auto max-w-[1480px]">
         <div className="mb-5 flex items-center gap-2 text-xs font-extrabold text-[#718078]">
           <Link href="/admin" className="transition hover:text-[#137b55]">
             Administração
