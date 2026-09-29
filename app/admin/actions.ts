@@ -10,6 +10,16 @@ export type AdminActionState = {
   message: string;
 };
 
+export type AdminCreditAdjustmentResult = AdminActionState & {
+  data?: {
+    providerUserId: string;
+    amount: number;
+    balanceBefore: number;
+    balanceAfter: number;
+    transactionId: string;
+  };
+};
+
 async function verifyAdmin() {
   const supabase = await createClient();
 
@@ -180,6 +190,140 @@ export async function rejectProvider(
   return {
     success: true,
     message: "Parceiro recusado com sucesso.",
+  };
+}
+
+export async function adjustPartnerCredits(
+  providerUserId: string,
+  amount: number,
+  reason: string,
+): Promise<AdminCreditAdjustmentResult> {
+  const { supabase, authorized } = await verifyAdmin();
+
+  if (!authorized) {
+    return {
+      success: false,
+      message: "Você não possui permissão para ajustar créditos.",
+    };
+  }
+
+  const normalizedProviderUserId = providerUserId.trim();
+  const normalizedReason = reason.trim();
+
+  if (!normalizedProviderUserId) {
+    return {
+      success: false,
+      message: "Parceiro não informado.",
+    };
+  }
+
+  if (!Number.isSafeInteger(amount) || amount === 0) {
+    return {
+      success: false,
+      message: "Informe uma quantidade inteira de créditos diferente de zero.",
+    };
+  }
+
+  if (normalizedReason.length < 5) {
+    return {
+      success: false,
+      message: "Informe um motivo com pelo menos 5 caracteres.",
+    };
+  }
+
+  if (normalizedReason.length > 500) {
+    return {
+      success: false,
+      message: "O motivo deve possuir no máximo 500 caracteres.",
+    };
+  }
+
+  const { data, error } = await supabase.rpc("admin_adjust_partner_credits", {
+    target_provider_user_id: normalizedProviderUserId,
+    adjustment_amount: amount,
+    adjustment_reason: normalizedReason,
+  });
+
+  if (error) {
+    console.error("Erro ao ajustar créditos do parceiro:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    if (error.message.includes("ADMIN_REQUIRED")) {
+      return {
+        success: false,
+        message: "Apenas administradores podem ajustar créditos.",
+      };
+    }
+
+    if (error.message.includes("PROVIDER_PROFILE_NOT_FOUND")) {
+      return {
+        success: false,
+        message: "Parceiro não encontrado.",
+      };
+    }
+
+    if (error.message.includes("INSUFFICIENT_CREDITS_FOR_ADJUSTMENT")) {
+      return {
+        success: false,
+        message: "O parceiro não possui créditos suficientes para esta remoção.",
+      };
+    }
+
+    if (error.message.includes("INVALID_ADJUSTMENT_AMOUNT")) {
+      return {
+        success: false,
+        message: "A quantidade de créditos deve ser diferente de zero.",
+      };
+    }
+
+    if (
+      error.message.includes("ADJUSTMENT_REASON_TOO_SHORT") ||
+      error.message.includes("ADJUSTMENT_REASON_TOO_LONG")
+    ) {
+      return {
+        success: false,
+        message: "Informe um motivo entre 5 e 500 caracteres.",
+      };
+    }
+
+    return {
+      success: false,
+      message: "Não foi possível ajustar os créditos do parceiro.",
+    };
+  }
+
+  const result = Array.isArray(data) ? data[0] : data;
+
+  if (!result) {
+    return {
+      success: false,
+      message: "O ajuste foi processado, mas o resultado não pôde ser confirmado.",
+    };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/parceiros");
+  revalidatePath(`/admin/parceiros/${normalizedProviderUserId}`);
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/protected/prestador/creditos");
+
+  return {
+    success: true,
+    message:
+      amount > 0
+        ? `${amount} crédito(s) adicionado(s) com sucesso.`
+        : `${Math.abs(amount)} crédito(s) removido(s) com sucesso.`,
+    data: {
+      providerUserId: result.provider_user_id,
+      amount: result.amount,
+      balanceBefore: result.balance_before,
+      balanceAfter: result.balance_after,
+      transactionId: result.transaction_id,
+    },
   };
 }
 
