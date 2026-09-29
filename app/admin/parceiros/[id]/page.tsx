@@ -206,7 +206,15 @@ function Empty({ text }: { text: string }) {
   return <div className="p-8 text-center text-xs font-semibold text-[#8b958e]">{text}</div>;
 }
 
-export default async function AdminPartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+async function PartnerRoute({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <Suspense fallback={<Loading />}><PartnerDetail id={id} /></Suspense>;
+  return <PartnerDetail id={id} />;
+}
+
+export default function AdminPartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <PartnerRoute params={params} />
+    </Suspense>
+  );
 }
