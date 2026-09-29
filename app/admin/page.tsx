@@ -210,7 +210,7 @@ async function AdminDashboard() {
               <AdminNavItem icon={<LayoutGrid className="h-[18px] w-[18px]" />} label="Visão geral" active />
               <AdminNavItem icon={<Store className="h-[18px] w-[18px]" />} label="Parceiros" badge={pendingPartnersCount} href="/admin/parceiros" />
               <AdminNavItem icon={<PackageCheck className="h-[18px] w-[18px]" />} label="Experiências" />
-              <AdminNavItem icon={<Handshake className="h-[18px] w-[18px]" />} label="Oportunidades" />
+              <AdminNavItem icon={<Handshake className="h-[18px] w-[18px]" />} label="Oportunidades" href="/admin/oportunidades" />
               <AdminNavItem icon={<Tags className="h-[18px] w-[18px]" />} label="Categorias" />
               <AdminNavItem icon={<Coins className="h-[18px] w-[18px]" />} label="Financeiro & créditos" />
             </nav>
@@ -273,7 +273,7 @@ async function AdminDashboard() {
               <MobileNav label="Visão geral" active />
               <MobileNav label="Parceiros" href="/admin/parceiros" />
               <MobileNav label="Experiências" />
-              <MobileNav label="Oportunidades" />
+              <MobileNav label="Oportunidades" href="/admin/oportunidades" />
               <MobileNav label="Categorias" />
               <MobileNav label="Créditos" />
             </div>
