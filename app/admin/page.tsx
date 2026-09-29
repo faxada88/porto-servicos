@@ -56,6 +56,7 @@ type AdminNavItemProps = {
   label: string;
   active?: boolean;
   badge?: number;
+  href?: string;
 };
 
 function formatDate(value: string) {
@@ -626,8 +627,9 @@ function AdminNavItem({
   label,
   active = false,
   badge,
+  href,
 }: AdminNavItemProps) {
-  return (
+  const item = (
     <div
       className={`flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-[12px] font-extrabold ${
         active
@@ -644,10 +646,12 @@ function AdminNavItem({
       ) : null}
     </div>
   );
+
+  return href ? <Link href={href}>{item}</Link> : item;
 }
 
-function MobileNav({ label, active = false }: { label: string; active?: boolean }) {
-  return (
+function MobileNav({ label, active = false, href }: { label: string; active?: boolean; href?: string }) {
+  const item = (
     <div
       className={`shrink-0 rounded-full px-3.5 py-2 text-[10px] font-black ${
         active
@@ -658,6 +662,8 @@ function MobileNav({ label, active = false }: { label: string; active?: boolean 
       {label}
     </div>
   );
+
+  return href ? <Link href={href}>{item}</Link> : item;
 }
 
 function MetricCard({
