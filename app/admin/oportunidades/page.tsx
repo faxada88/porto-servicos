@@ -23,7 +23,7 @@ function Loading() {
           {[1, 2, 3, 4].map((item) => <div key={item} className="h-32 animate-pulse rounded-[28px] bg-white" />)}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -121,7 +121,7 @@ async function OpportunitiesContent() {
           <OpportunitiesDashboard opportunities={opportunities} />
         )}
       </div>
-    </main>
+    </div>
   );
 }
 
