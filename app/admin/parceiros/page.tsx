@@ -313,7 +313,7 @@ async function PartnersContent() {
           )}
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 
