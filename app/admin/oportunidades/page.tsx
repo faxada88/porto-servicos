@@ -1,16 +1,13 @@
 import {
-  ArrowLeft,
   BadgeCheck,
   CalendarDays,
   Coins,
   Handshake,
-  MapPin,
   ShieldCheck,
   Sparkles,
   TrendingUp,
   UsersRound,
 } from "lucide-react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -26,7 +23,7 @@ function Loading() {
           {[1, 2, 3, 4].map((item) => <div key={item} className="h-32 animate-pulse rounded-[28px] bg-white" />)}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -91,18 +88,9 @@ async function OpportunitiesContent() {
   const conversion = opportunities.length ? Math.round((unlocked.length / opportunities.length) * 100) : 0;
 
   return (
-    <main className="min-h-screen bg-[#f5f8f5] text-[#142018]">
-      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-7 sm:py-8 xl:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link href="/admin" className="inline-flex items-center gap-2 text-xs font-black text-[#607168] transition hover:text-[#0f8056]">
-            <ArrowLeft className="h-4 w-4" /> Voltar ao Command Center
-          </Link>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#dce9df] bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#547064]">
-            <MapPin className="h-3.5 w-3.5 text-[#10a36d]" /> Porto Seguro · Bahia
-          </div>
-        </div>
-
-        <section className="relative mt-5 overflow-hidden rounded-[36px] border border-[#dce8df] bg-[#123c2a] px-6 py-8 text-white shadow-[0_28px_80px_-48px_rgba(18,60,42,0.85)] sm:px-9 sm:py-10">
+    <div className="px-4 py-6 sm:px-7 sm:py-8 xl:px-9">
+      <div className="mx-auto max-w-[1480px]">
+        <section className="relative overflow-hidden rounded-[30px] border border-[#dce8df] bg-[#123c2a] px-6 py-8 text-white shadow-[0_28px_80px_-48px_rgba(18,60,42,0.85)] sm:px-9 sm:py-10">
           <div className="absolute -right-20 -top-24 h-80 w-80 rounded-full bg-[#2dd491]/20 blur-3xl" />
           <div className="absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-[#f3c86a]/10 blur-3xl" />
           <div className="relative max-w-4xl">
