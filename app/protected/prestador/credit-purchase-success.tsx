@@ -10,10 +10,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import {
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -31,10 +28,7 @@ type CheckoutStatus =
 
 type StatusResponse = {
   ok?: boolean;
-  status?:
-    | "credited"
-    | "processing"
-    | "pending";
+  status?: "credited" | "processing" | "pending";
   paymentStatus?: string;
   credits?: number;
   balance?: number | null;
@@ -49,43 +43,32 @@ export default function CreditPurchaseSuccess() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [mounted, setMounted] =
-    useState(false);
-
+  const [mounted, setMounted] = useState(false);
   const [status, setStatus] =
     useState<CheckoutStatus>("idle");
-
   const [credits, setCredits] =
     useState<number | null>(null);
-
   const [balance, setBalance] =
     useState<number | null>(null);
-
   const [error, setError] =
     useState<string | null>(null);
 
   const timeoutRef =
-    useRef<ReturnType<
-      typeof setTimeout
-    > | null>(null);
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const attemptsRef = useRef(0);
-  const requestRunningRef =
-    useRef(false);
+  const requestRunningRef = useRef(false);
 
-  const checkout =
-    searchParams.get("checkout");
-
-  const orderId =
-    searchParams.get("order_id");
-
-  const sessionId =
-    searchParams.get("session_id");
+  const checkout = searchParams.get("checkout");
+  const orderId = searchParams.get("order_id");
+  const sessionId = searchParams.get("session_id");
 
   const isValidReturn =
     checkout === "success" &&
-    Boolean(orderId) &&
-    Boolean(sessionId);
+    typeof orderId === "string" &&
+    orderId.length > 0 &&
+    typeof sessionId === "string" &&
+    sessionId.length > 0;
 
   const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
@@ -127,6 +110,17 @@ export default function CreditPurchaseSuccess() {
       return;
     }
 
+    /*
+     * Depois desta validação criamos cópias locais
+     * explicitamente tipadas como string.
+     *
+     * Isso evita que o TypeScript volte a considerar
+     * os valores como string | null dentro da função
+     * assíncrona usada pelo polling.
+     */
+    const confirmedOrderId: string = orderId;
+    const confirmedSessionId: string = sessionId;
+
     let disposed = false;
 
     attemptsRef.current = 0;
@@ -146,8 +140,7 @@ export default function CreditPurchaseSuccess() {
       }
 
       if (
-        attemptsRef.current >=
-        MAX_ATTEMPTS
+        attemptsRef.current >= MAX_ATTEMPTS
       ) {
         setError(
           "O pagamento foi recebido, mas a atualização da carteira está levando mais tempo que o esperado. Você pode tentar confirmar novamente sem realizar outro pagamento.",
@@ -160,11 +153,10 @@ export default function CreditPurchaseSuccess() {
       requestRunningRef.current = true;
 
       try {
-        const params =
-          new URLSearchParams({
-            order_id: orderId,
-            session_id: sessionId,
-          });
+        const params = new URLSearchParams({
+          order_id: confirmedOrderId,
+          session_id: confirmedSessionId,
+        });
 
         const response = await fetch(
           `/api/stripe/checkout/status?${params.toString()}`,
@@ -194,10 +186,8 @@ export default function CreditPurchaseSuccess() {
 
         if (
           data.status === "credited" &&
-          typeof data.credits ===
-            "number" &&
-          typeof data.balance ===
-            "number"
+          typeof data.credits === "number" &&
+          typeof data.balance === "number"
         ) {
           clearTimer();
 
@@ -207,9 +197,9 @@ export default function CreditPurchaseSuccess() {
           setStatus("success");
 
           /*
-           * Só atualizamos os Server Components
-           * depois de o backend confirmar que
-           * a carteira realmente foi creditada.
+           * Atualiza os Server Components somente
+           * depois que o backend confirmar que os
+           * créditos realmente entraram.
            */
           router.refresh();
 
@@ -222,10 +212,9 @@ export default function CreditPurchaseSuccess() {
         ) {
           setStatus("processing");
 
-          timeoutRef.current =
-            setTimeout(() => {
-              void checkStatus();
-            }, POLL_INTERVAL_MS);
+          timeoutRef.current = setTimeout(() => {
+            void checkStatus();
+          }, POLL_INTERVAL_MS);
 
           return;
         }
@@ -239,21 +228,17 @@ export default function CreditPurchaseSuccess() {
         }
 
         /*
-         * Falhas transitórias de rede/API também
-         * recebem novas tentativas. Isso evita
-         * transformar um pequeno atraso em erro
-         * definitivo para o parceiro.
+         * Falhas transitórias também recebem novas
+         * tentativas sem criar uma nova cobrança.
          */
         if (
-          attemptsRef.current <
-          MAX_ATTEMPTS
+          attemptsRef.current < MAX_ATTEMPTS
         ) {
           setStatus("processing");
 
-          timeoutRef.current =
-            setTimeout(() => {
-              void checkStatus();
-            }, POLL_INTERVAL_MS);
+          timeoutRef.current = setTimeout(() => {
+            void checkStatus();
+          }, POLL_INTERVAL_MS);
 
           return;
         }
@@ -266,8 +251,7 @@ export default function CreditPurchaseSuccess() {
 
         setStatus("error");
       } finally {
-        requestRunningRef.current =
-          false;
+        requestRunningRef.current = false;
       }
     }
 
@@ -298,8 +282,7 @@ export default function CreditPurchaseSuccess() {
     const previousOverflow =
       document.body.style.overflow;
 
-    document.body.style.overflow =
-      "hidden";
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.body.style.overflow =
@@ -337,21 +320,15 @@ export default function CreditPurchaseSuccess() {
   }, [close, status]);
 
   function retry() {
-    /*
-     * Mantemos os mesmos order_id/session_id.
-     * Nenhum novo Checkout é criado.
-     */
     attemptsRef.current = 0;
     requestRunningRef.current = false;
     setError(null);
+    setStatus("checking");
 
     /*
-     * Alterar para checking provoca uma nova
-     * montagem lógica por meio da chave abaixo.
-     * Para garantir uma nova consulta sem
-     * duplicar compra, recarregamos a URL atual.
+     * Recarrega exatamente o mesmo retorno do
+     * Checkout. Nenhuma nova cobrança é criada.
      */
-    setStatus("checking");
     window.location.reload();
   }
 
@@ -708,7 +685,6 @@ export default function CreditPurchaseSuccess() {
                 "
               >
                 <Sparkles className="h-4 w-4" />
-
                 Continuar na Central
               </button>
 
@@ -804,7 +780,6 @@ export default function CreditPurchaseSuccess() {
                 "
               >
                 <RefreshCw className="h-4 w-4" />
-
                 Confirmar novamente
               </button>
 
@@ -833,8 +808,5 @@ export default function CreditPurchaseSuccess() {
     </div>
   );
 
-  return createPortal(
-    modal,
-    document.body,
-  );
+  return createPortal(modal, document.body);
 }
