@@ -3,7 +3,7 @@
 import { Minus, Plus, ShieldCheck } from "lucide-react";
 import { useState, useTransition } from "react";
 
-import { adjustPartnerCredits } from "../actions";
+import { adjustPartnerCredits } from "./actions";
 
 export default function CreditAdjustmentForm({
   providerUserId,
