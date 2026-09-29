@@ -207,7 +207,7 @@ async function AdminDashboard() {
 
             <nav className="space-y-1">
               <AdminNavItem icon={<LayoutGrid className="h-[18px] w-[18px]" />} label="Visão geral" active />
-              <AdminNavItem icon={<Store className="h-[18px] w-[18px]" />} label="Parceiros" badge={pendingPartnersCount} />
+              <AdminNavItem icon={<Store className="h-[18px] w-[18px]" />} label="Parceiros" badge={pendingPartnersCount} href="/admin/parceiros" />
               <AdminNavItem icon={<PackageCheck className="h-[18px] w-[18px]" />} label="Experiências" />
               <AdminNavItem icon={<Handshake className="h-[18px] w-[18px]" />} label="Oportunidades" />
               <AdminNavItem icon={<Tags className="h-[18px] w-[18px]" />} label="Categorias" />
@@ -270,7 +270,7 @@ async function AdminDashboard() {
 
             <div className="flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6">
               <MobileNav label="Visão geral" active />
-              <MobileNav label="Parceiros" />
+              <MobileNav label="Parceiros" href="/admin/parceiros" />
               <MobileNav label="Experiências" />
               <MobileNav label="Oportunidades" />
               <MobileNav label="Categorias" />
