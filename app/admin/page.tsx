@@ -5,7 +5,6 @@ import {
   ChevronRight,
   Clock3,
   Coins,
-  CreditCard,
   ExternalLink,
   Handshake,
   LayoutGrid,
@@ -17,7 +16,6 @@ import {
   Store,
   Tags,
   Users,
-  WalletCards,
 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -28,7 +26,6 @@ import {
   rejectProvider,
   signOutAdmin,
 } from "./actions";
-import StripeCatalogSync from "./stripe-catalog-sync";
 import { createClient } from "@/lib/supabase/server";
 
 type PendingPartner = {
@@ -52,6 +49,13 @@ type AdminShortcutProps = {
   title: string;
   description: string;
   status?: string;
+};
+
+type AdminNavItemProps = {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  badge?: number;
 };
 
 function formatDate(value: string) {
@@ -122,8 +126,6 @@ async function AdminDashboard() {
     activeServicesResult,
     categoriesResult,
     leadsResult,
-    subscriptionsResult,
-    creditPackagesResult,
   ] = await Promise.all([
     supabase
       .from("provider_profiles")
@@ -163,17 +165,7 @@ async function AdminDashboard() {
 
     supabase
       .from("partner_leads")
-      .select("id", { count: "exact", head: true }),
-
-    supabase
-      .from("partner_subscriptions")
       .select("id", { count: "exact", head: true })
-      .eq("status", "active"),
-
-    supabase
-      .from("partner_credit_packages")
-      .select("id", { count: "exact", head: true })
-      .eq("is_active", true),
   ]);
 
   const pendingPartners =
@@ -188,85 +180,124 @@ async function AdminDashboard() {
   const activeServices = activeServicesResult.count ?? 0;
   const activeCategories = categoriesResult.count ?? 0;
   const totalLeads = leadsResult.count ?? 0;
-  const activeSubscriptions = subscriptionsResult.count ?? 0;
-  const creditPackages = creditPackagesResult.count ?? 0;
 
   return (
-    <main className="min-h-screen bg-[#f5f7f3] text-[#172019]">
-      <header className="sticky top-0 z-40 border-b border-black/[0.05] bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-5 px-5 py-4 sm:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#173f2c] text-white">
+    <main className="min-h-screen bg-[#f4f7f4] text-[#142018]">
+      <div className="mx-auto flex min-h-screen max-w-[1800px]">
+        <aside className="sticky top-0 hidden h-screen w-[272px] shrink-0 flex-col border-r border-[#e5eae5] bg-white px-5 py-6 lg:flex">
+          <div className="flex items-center gap-3 px-2">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-[#123c2a] text-white shadow-[0_10px_28px_-14px_rgba(18,60,42,0.8)]">
               <ShieldCheck className="h-5 w-5" />
             </div>
 
             <div>
-              <p className="text-lg font-black tracking-[-0.04em] sm:text-xl">
-                Porto Serviços
+              <p className="text-[18px] font-black tracking-[-0.045em]">
+                Porto<span className="text-[#16a36f]">Serviços</span>
               </p>
-
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#899189]">
-                Administração
+              <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-[#9aa39c]">
+                Command Center
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="mt-8 px-2">
+            <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-[#a0a8a1]">
+              Operação
+            </p>
+
+            <nav className="space-y-1">
+              <AdminNavItem icon={<LayoutGrid className="h-[18px] w-[18px]" />} label="Visão geral" active />
+              <AdminNavItem icon={<Store className="h-[18px] w-[18px]" />} label="Parceiros" badge={pendingPartnersCount} />
+              <AdminNavItem icon={<PackageCheck className="h-[18px] w-[18px]" />} label="Experiências" />
+              <AdminNavItem icon={<Handshake className="h-[18px] w-[18px]" />} label="Oportunidades" />
+              <AdminNavItem icon={<Tags className="h-[18px] w-[18px]" />} label="Categorias" />
+              <AdminNavItem icon={<Coins className="h-[18px] w-[18px]" />} label="Financeiro & créditos" />
+            </nav>
+          </div>
+
+          <div className="mt-7 px-2">
+            <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-[#a0a8a1]">
+              Sistema
+            </p>
+            <AdminNavItem icon={<ShieldCheck className="h-[18px] w-[18px]" />} label="Administração" />
+          </div>
+
+          <div className="mt-auto">
             <Link
               href="/protected"
-              className="hidden items-center gap-2 rounded-full border border-[#e0e5de] bg-white px-4 py-2.5 text-xs font-black transition hover:bg-[#f5f7f3] sm:inline-flex"
+              className="flex items-center justify-between rounded-[18px] border border-[#e4e9e4] bg-[#f8faf8] px-4 py-3.5 text-xs font-black text-[#405047] transition hover:border-[#cfdacf] hover:bg-white"
             >
-              <ExternalLink className="h-4 w-4" />
-              Ver plataforma
+              <span className="flex items-center gap-2.5">
+                <ExternalLink className="h-4 w-4 text-[#16815a]" />
+                Ver plataforma
+              </span>
+              <ChevronRight className="h-4 w-4 text-[#a2aaa4]" />
             </Link>
 
-            <div className="flex items-center gap-2 rounded-full border border-[#dfe4dc] bg-[#f7f8f5] px-3 py-2 sm:px-4">
-              <ShieldCheck className="h-4 w-4 text-[#1e6540]" />
-
-              <div className="hidden sm:block">
-                <p className="text-xs font-black leading-none">
-                  Administrador
-                </p>
-
-                <p className="mt-1 max-w-40 truncate text-[10px] font-semibold text-[#858d85]">
-                  {user.email}
-                </p>
+            <div className="mt-3 flex items-center gap-3 rounded-[20px] bg-[#123c2a] p-3.5 text-white">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xs font-black">
+                A
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black">Administrador</p>
+                <p className="mt-0.5 truncate text-[9px] font-semibold text-white/55">{user.email}</p>
+              </div>
+              <form action={signOutAdmin}>
+                <button type="submit" title="Sair" className="flex h-8 w-8 items-center justify-center rounded-xl text-white/60 transition hover:bg-white/10 hover:text-white">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        </aside>
+
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-40 border-b border-[#e5eae5] bg-white/90 backdrop-blur-xl lg:hidden">
+            <div className="flex h-[70px] items-center justify-between px-4 sm:px-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#123c2a] text-white">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-black tracking-[-0.03em]">Porto Serviços</p>
+                  <p className="text-[8px] font-black uppercase tracking-[0.16em] text-[#9aa39c]">Administração</p>
+                </div>
+              </div>
+              <Link href="/protected" className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[#e1e7e2] bg-white text-[#526057]" aria-label="Ver plataforma">
+                <ExternalLink className="h-4 w-4" />
+              </Link>
             </div>
 
-            <form action={signOutAdmin}>
-              <button
-                type="submit"
-                title="Sair da administração"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e0e5de] bg-white text-[#5d655e] transition hover:border-red-100 hover:bg-red-50 hover:text-red-700"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+            <div className="flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6">
+              <MobileNav label="Visão geral" active />
+              <MobileNav label="Parceiros" />
+              <MobileNav label="Experiências" />
+              <MobileNav label="Oportunidades" />
+              <MobileNav label="Categorias" />
+              <MobileNav label="Créditos" />
+            </div>
+          </header>
 
-      <div className="mx-auto max-w-[1440px] px-5 py-7 sm:px-8 sm:py-10">
-        <section className="overflow-hidden rounded-[34px] bg-[#173f2c] px-6 py-8 text-white shadow-[0_25px_80px_rgba(23,63,44,0.16)] sm:px-9 sm:py-9">
+          <div className="px-4 py-6 sm:px-7 sm:py-8 xl:px-10">
+        <section className="relative overflow-hidden rounded-[32px] border border-[#dfe8e1] bg-white px-6 py-7 shadow-[0_22px_70px_-52px_rgba(20,55,37,0.45)] sm:px-8 sm:py-8">
           <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#dcebe1] bg-[#f1f9f4] px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#137b55]">
                 <Sparkles className="h-4 w-4" />
                 Central administrativa
               </div>
 
-              <h1 className="mt-5 max-w-3xl text-3xl font-black tracking-[-0.055em] sm:text-4xl lg:text-[46px] lg:leading-[1.02]">
+              <h1 className="mt-5 max-w-3xl text-3xl font-black tracking-[-0.055em] text-[#13231a] sm:text-4xl lg:text-[44px] lg:leading-[1.02]">
                 Operação da Porto Serviços em um só lugar.
               </h1>
 
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70 sm:text-base">
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-[#718077] sm:text-base">
                 Gerencie parceiros, experiências, oportunidades comerciais e
                 a operação da plataforma de turismo de Porto Seguro.
               </p>
             </div>
 
-            <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black">
+            <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-[#dce8df] bg-[#f4f9f5] px-4 py-3 text-sm font-black text-[#28513b]">
               <MapPin className="h-4 w-4" />
               Porto Seguro, Bahia
             </div>
@@ -351,39 +382,11 @@ async function AdminDashboard() {
             />
 
             <AdminShortcut
-              icon={<CreditCard className="h-5 w-5" />}
-              title="Assinaturas"
-              description="Planos comerciais dos parceiros"
-              status={`${activeSubscriptions} ativas`}
-            />
-
-            <AdminShortcut
               icon={<Coins className="h-5 w-5" />}
               title="Créditos"
-              description="Pacotes usados para oportunidades comerciais"
-              status={`${creditPackages} pacotes ativos`}
+              description="Carteiras, compras e consumo por oportunidades"
+              status="Modelo por créditos"
             />
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#7c857d]">
-              Monetização
-            </p>
-
-            <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] sm:text-3xl">
-              Stripe e catálogo comercial
-            </h2>
-
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#707970]">
-              Controle a integração dos planos e pacotes de créditos que serão
-              disponibilizados aos parceiros no Checkout da Porto Serviços.
-            </p>
-          </div>
-
-          <div className="mt-6">
-            <StripeCatalogSync />
           </div>
         </section>
 
@@ -570,7 +573,7 @@ async function AdminDashboard() {
           )}
         </section>
 
-        <section className="mt-10 grid gap-4 lg:grid-cols-2">
+        <section className="mt-10">
           <article className="rounded-[30px] border border-black/5 bg-white p-6 sm:p-7">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#edf7ef] text-[#24613d]">
@@ -594,28 +597,6 @@ async function AdminDashboard() {
             </div>
           </article>
 
-          <article className="rounded-[30px] border border-black/5 bg-white p-6 sm:p-7">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#edf7ef] text-[#24613d]">
-                <WalletCards className="h-6 w-6" />
-              </div>
-
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#858d85]">
-                  Monetização
-                </p>
-
-                <h2 className="mt-1 text-xl font-black tracking-[-0.03em]">
-                  Stripe + créditos
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-[#707970]">
-                  A estrutura de planos, assinaturas, carteira e pacotes de
-                  créditos está conectada à base comercial da plataforma.
-                </p>
-              </div>
-            </div>
-          </article>
         </section>
 
         <footer className="mt-10 flex flex-col justify-between gap-4 border-t border-black/5 py-7 text-xs font-semibold text-[#8a928a] sm:flex-row sm:items-center">
@@ -633,8 +614,49 @@ async function AdminDashboard() {
             </span>
           </div>
         </footer>
+          </div>
+        </div>
       </div>
     </main>
+  );
+}
+
+function AdminNavItem({
+  icon,
+  label,
+  active = false,
+  badge,
+}: AdminNavItemProps) {
+  return (
+    <div
+      className={`flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-[12px] font-extrabold ${
+        active
+          ? "bg-[#eaf7ef] text-[#146b4b]"
+          : "text-[#667269]"
+      }`}
+    >
+      <span className={active ? "text-[#15825a]" : "text-[#8b958e]"}>{icon}</span>
+      <span className="flex-1">{label}</span>
+      {typeof badge === "number" && badge > 0 ? (
+        <span className="min-w-6 rounded-full bg-[#123c2a] px-2 py-1 text-center text-[9px] font-black text-white">
+          {badge}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function MobileNav({ label, active = false }: { label: string; active?: boolean }) {
+  return (
+    <div
+      className={`shrink-0 rounded-full px-3.5 py-2 text-[10px] font-black ${
+        active
+          ? "bg-[#123c2a] text-white"
+          : "border border-[#e2e7e2] bg-white text-[#748078]"
+      }`}
+    >
+      {label}
+    </div>
   );
 }
 
@@ -672,13 +694,12 @@ function AdminShortcut({
   status,
 }: AdminShortcutProps) {
   return (
-    <article className="group rounded-[26px] border border-black/[0.05] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#ccd9cf] hover:shadow-[0_14px_40px_rgba(25,42,31,0.06)]">
+    <article className="rounded-[26px] border border-black/[0.05] bg-white p-5 shadow-[0_10px_35px_-30px_rgba(20,45,30,0.35)]">
       <div className="flex items-start justify-between gap-4">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf7ef] text-[#23633d]">
           {icon}
         </div>
 
-        <ChevronRight className="h-5 w-5 text-[#b1b7b1] transition group-hover:translate-x-0.5 group-hover:text-[#23633d]" />
       </div>
 
       <h3 className="mt-5 text-base font-black tracking-[-0.025em]">
