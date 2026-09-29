@@ -139,6 +139,24 @@ async function TouristDashboard() {
   const userId = claims.sub;
 
   const {
+    data: roleData,
+    error: roleError,
+  } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (roleError) {
+    console.error(
+      "Erro ao verificar papel da conta:",
+      roleError,
+    );
+  }
+
+  const isAdmin = roleData?.role === "admin";
+
+  const {
     data: providerProfile,
     error: providerError,
   } = await supabase
@@ -159,9 +177,10 @@ async function TouristDashboard() {
    * são direcionados para a área de acompanhamento.
    */
   if (
-    providerProfile?.status === "pending" ||
-    providerProfile?.status === "rejected" ||
-    providerProfile?.status === "suspended"
+    !isAdmin &&
+    (providerProfile?.status === "pending" ||
+      providerProfile?.status === "rejected" ||
+      providerProfile?.status === "suspended")
   ) {
     redirect("/protected/prestador/status");
   }
@@ -212,6 +231,7 @@ async function TouristDashboard() {
       : "";
 
   const isProvider =
+    !isAdmin &&
     providerProfile?.status === "approved";
 
   const categoryIconMap: Record<
@@ -318,6 +338,7 @@ async function TouristDashboard() {
               firstName={firstName}
               email={email}
               isProvider={isProvider}
+              isAdmin={isAdmin}
             />
           </div>
         </div>
@@ -618,7 +639,7 @@ async function TouristDashboard() {
           </section>
 
           {/* PARCEIRO */}
-          {!isProvider && (
+          {!isProvider && !isAdmin && (
             <section className="mt-12">
               <div className="rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-7 sm:px-8">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
