@@ -520,6 +520,7 @@ async function AdminDashboard() {
         </span>
       </div>
         </footer>
+      </div>
     </div>
   );
 }
