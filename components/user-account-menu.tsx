@@ -22,6 +22,7 @@ type UserAccountMenuProps = {
   firstName: string;
   email: string;
   isProvider: boolean;
+  isAdmin: boolean;
 };
 
 type MenuLinkProps = {
@@ -102,6 +103,7 @@ export function UserAccountMenu({
   firstName,
   email,
   isProvider,
+  isAdmin,
 }: UserAccountMenuProps) {
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -236,9 +238,11 @@ export function UserAccountMenu({
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
 
             <span className="text-[9px] font-bold text-slate-400">
-              {isProvider
-                ? "Parceiro"
-                : "Viajante"}
+              {isAdmin
+                ? "Administrador"
+                : isProvider
+                  ? "Parceiro"
+                  : "Viajante"}
             </span>
           </div>
         </div>
@@ -273,9 +277,13 @@ export function UserAccountMenu({
                 </p>
               </div>
 
-              {isProvider ? (
+              {isProvider || isAdmin ? (
                 <div
-                  title="Parceiro aprovado"
+                  title={
+                    isAdmin
+                      ? "Administrador"
+                      : "Parceiro aprovado"
+                  }
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100"
                 >
                   <ShieldCheck size={15} />
@@ -284,7 +292,53 @@ export function UserAccountMenu({
             </div>
           </div>
 
-          {isProvider ? (
+          {isAdmin ? (
+            <>
+              <div className="px-4 pb-4">
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                    Administração
+                  </p>
+
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Admin
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <MenuLink
+                    href="/admin"
+                    title="Painel administrativo"
+                    description="Gerencie a Porto Serviços"
+                    icon={<LayoutDashboard size={18} />}
+                    onClick={closeMenu}
+                  />
+
+                  <MenuLink
+                    href="/protected"
+                    title="Ver plataforma"
+                    description="Visualize a experiência do viajante"
+                    icon={<Compass size={18} />}
+                    onClick={closeMenu}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 bg-slate-50/40 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck
+                    size={13}
+                    className="shrink-0 text-slate-400"
+                  />
+
+                  <p className="truncate text-[10px] font-semibold text-slate-400">
+                    Acesso administrativo
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : isProvider ? (
             <>
               <div className="px-4 pb-4">
                 <div className="mb-2 flex items-center justify-between px-1">
